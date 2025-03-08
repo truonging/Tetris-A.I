@@ -6,6 +6,9 @@
 ## **Tetris AI in Action**
 ![Tetris AI Playing](assets/tetris_ai_demo.gif)
 
+## **Genetic Algorithm in Action**
+![Tetris AI Playing](assets/ga_ai_demo.gif)
+
 ## Overview
 This project is an AI-driven Tetris player built using **Python** and **Pygame**. It leverages **Deep Q-Networks (DQN), Double DQN, Prioritized Experience Replay, and Genetic Algorithms** to train an agent that can efficiently play Tetris. The project underwent significant optimizations from **Version 1** to **Version 2** to enhance training speed and efficiency.
 
