@@ -1,5 +1,8 @@
 # Tetris AI Project
 
+## **Demo Video**
+[![Tetris AI Demo](https://img.youtube.com/vi/D8MjBG5kSzU/0.jpg)](https://www.youtube.com/watch?v=D8MjBG5kSzU)
+
 ## Overview
 This project is an AI-driven Tetris player built using **Python** and **Pygame**. It leverages **Deep Q-Networks (DQN), Double DQN, Prioritized Experience Replay, and Genetic Algorithms** to train an agent that can efficiently play Tetris. The project underwent significant optimizations from **Version 1** to **Version 2** to enhance training speed and efficiency.
 
