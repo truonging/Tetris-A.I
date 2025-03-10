@@ -13,38 +13,38 @@
 This project is an AI-driven Tetris player built using **Python** and **Pygame**. It leverages **Deep Q-Networks (DQN), Double DQN, Prioritized Experience Replay, and Genetic Algorithms** to train an agent that can efficiently play Tetris. The project underwent significant optimizations from **Version 1** to **Version 2** to enhance training speed and efficiency.
 
 ## Environment
-The game environment follows **NES Tetris** rules, implementing:
-- **Scoring system** similar to NES Tetris.
-- **Gravity mechanics** for line clears.
+The game environment follows NES Tetris rules, implementing:
+- Scoring system similar to NES Tetris.
+- Gravity mechanics for line clears.
 
-The AI interacts with the game through **state-based decisions**, selecting moves from all possible placements and rotations.
+The AI interacts with the game through state-based decisions, selecting moves from all possible placements and rotations.
 
-## **AI Agent**
+## AI Agent
 The initial AI agent was based on **Deep Q-Learning (DQN)**, which uses a **single neural network** to estimate both **current and target Q-values**. However, this approach had issues with **Q-value overestimation** and **early convergence**, leading us to explore improvements.
 
-### **Why Q-Learning and DQN?**
+### Why Q-Learning and DQN?
 - Tetris has a **well-defined state space**: We represent the board state using **6 features** (`total_height, bumpiness, holes, line_cleared, y_pos, pillar`).
-- The agent **selects only one action per move**, making Q-learning a **good fit** for evaluating discrete actions efficiently.
+- The agent **selects only one action per move**, making Q-learning a good fit for evaluating discrete actions efficiently.
 - **Experience Replay** helped stabilize learning by allowing the agent to learn from past moves, improving long-term decision-making.
 - With this setup, some agents **achieved 500+ lines** by **game 10,000**, demonstrating strong learning potential.
 
-### **Transition to Double Q-Learning**
+### Transition to Double Q-Learning
 - Initially, we implemented **Double Q-Learning**, which **separates action selection from Q-value estimation** to **reduce overestimation bias**.
-- This led to more **accurate value estimations**, improving learning stability.
+- This led to more accurate value estimations, improving learning stability.
 
-### **Switching to Double DQN (DDQN)**
+### Switching to Double DQN (DDQN)
 We later adopted **Double DQN (DDQN)**, which expands on Double Q-Learning by using **two separate neural networks**:
 - **Primary Network**: Predicts actions and updates **every 200 pieces placed**.
 - **Target Network**: Computes target Q-values and updates **every 1000 pieces** to provide more stable training.
 
 This approach **reduces instability** in training, **prevents premature convergence**, and allows the agent to **generalize better across different board states**.
 
-### **Prioritized Experience Replay (PER)**
+### Prioritized Experience Replay (PER)
 Initially, our agent used **Experience Replay**, where past experiences were **randomly sampled** for training. This method helped the agent make **long-term decisions** by allowing it to learn from **past moves**, rather than relying solely on recent experiences.
 
 However, **random sampling treats all experiences equally**, even though some experiences provide **more learning value** than others. To improve this, we implemented **Prioritized Experience Replay (PER).**
 
-#### **Why Prioritized Experience Replay?**
+#### Why Prioritized Experience Replay?
 - Instead of selecting experiences at random, **PER selects experiences based on their TD error** (**Temporal Difference Error**).
 - **TD Error = Difference between predicted and actual Q-values**.
   - **High TD Error** → The agent’s prediction was far off, meaning **there’s more to learn from this experience**.
@@ -52,27 +52,33 @@ However, **random sampling treats all experiences equally**, even though some ex
 
 By prioritizing high **TD error** experiences, the agent **learns from its biggest mistakes first**, leading to **faster and more efficient training**—especially in early stages.
 
-#### **Implementation of PER**
-- We replaced the traditional **deque-based replay buffer** with a **heap-based structure**, allowing efficient retrieval of **high-priority experiences**.
+#### Implementation of PER
+- We replaced the traditional deque-based replay buffer with a **heap-based structure**, allowing efficient retrieval of **high-priority experiences**.
 - The heap keeps track of the **maximum TD error**, ensuring that the most **informative experiences are sampled more frequently**.
 
 This approach **significantly improved early training efficiency**, allowing the agent to **focus on valuable experiences** rather than wasting computation on redundant ones.
 
-
 ### Reward Function Design
-Designing a balanced reward function was challenging. If the agent was **only rewarded for clearing lines**, it struggled to learn the steps required to set up efficient line clears. Instead, we introduced **sparse rewards** that encourage moves leading to a **better board state**.
+A well-balanced reward function was necessary to help the agent learn **long-term strategies**. Simply rewarding line clears resulted in poor planning, so we introduced **sparse rewards** to encourage **better board management**.
 
-- A **good board** should have:
-  - **Minimal bumpiness** (smooth surfaces for easier clears)
-  - **Minimal holes** (no trapped empty spaces)
-  - **Small pillars** (avoiding difficult-to-clear structures)
+#### Key Objectives of a Good Board State:
+- **Minimal bumpiness** → Smoother surfaces for easier line clears.
+- **Minimal holes** → Avoiding trapped empty spaces.
+- **Small pillars** → Preventing difficult-to-clear structures.
 
-To achieve this:
-- The agent was **punished for increasing bumpiness, holes, or large pillars**.
-- **Stacking too high resulted in additional penalties**.
-- Moves that **created stable board structures** were **encouraged**.
+#### Reward & Penalty System:
+- **Penalties for** increasing bumpiness, holes, or large pillars.
+- **Punishment for stacking too high** to prevent early game over.
+- **Encouragement for moves that improve board stability.**
 
-This approach helped the agent develop **long-term strategies** rather than focusing only on immediate rewards.
+#### Handling Delayed Rewards (Temporal Credit Assignment Problem)
+A good move in Tetris **does not always have an immediate impact**. The agent may place a piece that **sets up a Tetris many moves later**.
+
+- **Short-term rewards** (clearing a single line) might seem optimal, but **setting up for a Tetris (4-line clear) is more valuable**.
+- **Experience Replay** helps the agent revisit **earlier moves that contributed to major rewards later**, reinforcing good strategies.
+- **Discount Factor (Gamma = 0.999)** ensures that the agent **values long-term rewards**, preventing greed for short-term gains.
+
+By **considering the delayed impact of moves**, the agent learns **how to set up better board states**, instead of focusing only on immediate rewards.
 
 ### Exploration vs. Exploitation Strategy
 Instead of relying solely on a **typical decay schedule**, we combined it with an **alternating strategy** between **high exploration and high exploitation** in **500-game cycles**. This method **sped up learning while maintaining stability**.
@@ -87,61 +93,32 @@ Instead of relying solely on a **typical decay schedule**, we combined it with a
 - **Epsilon:** `0.0001`
 - **Learning Rate (LR):** `0.001`
 - The agent **tests its learned strategies** from the exploration phase.
-- **Lower LR prevents drastic updates**, refining the strategy **without overfitting**.
+- **Lower LR prevents drastic updates**, refining the strategy without overfitting.
 - This phase **stabilizes** the agent's learning, similar to how **stocks correct after a surge**.
 
 #### Second Cycle of Exploration & Exploitation
-- In the first cycle, exploration happened **without prior knowledge**.
-- In the second cycle, the agent **explored with refined strategies**, leading to more **targeted discoveries**.
-- Another **500-game exploration phase** allowed for additional improvements.
-- The final **exploitation phase fine-tuned an even better strategy**.
-- **One full cycle** was enough for a **high-scoring AI (1M+ points)**.
-- **Two cycles further optimized** the agent, enough to have the agent .
+- **First cycle**: The agent explored **without prior knowledge**.
+- **Second cycle**: The agent **explored with refined strategies**, leading to more **targeted discoveries**.
+- **Another 500-game exploration phase** allowed for additional improvements.
+- **Final exploitation phase** fine-tuned an even better strategy.
 
-This alternating method helped the agent **learn, refine, explore deeper, and perfect its strategy**.
+This **alternating method** allowed the agent to **learn, refine, explore deeper, and perfect its strategy**.
 
-### Neural Network Architecture
-- **Input Size**: 6 features (total_height, bumpiness, holes, line_cleared, y_pos, pillar)
-- **Hidden Layers**: 2 layers, **32 neurons each**
-- **Output**: 1 action per placement
-- **Learning Rate**: Starts at `0.01`, decaying to `0.001`
-- **Gamma (Discount Factor):** `0.999`
-- **Exploration Strategy**: Epsilon-greedy decay from `0.3 → 0.0001`
-- **Batch Size**: `128`
-- **Training Epochs**: `2 per iteration`
+### Genetic Algorithm (GA)
+Balancing the reward function for Tetris AI proved to be **extremely difficult**:
+- **Punishing holes too much** led to agents building tall pillars.
+- **Punishing pillars too much** made agents cover them too early, avoiding **Tetris clears**.
+- **Over-rewarding Tetris clears** made agents stack high and wait for an I-piece, often leading to failure.
+- **Under-rewarding Tetris clears** led to single and double line clears, missing higher scores.
 
-## **Genetic Algorithm (GA)**
-Balancing the reward function for Tetris AI proved to be extremely difficult:
-- **Punishing holes too much** led to agents **building tall pillars**.
-- **Punishing pillars too much** made agents **cover them too early**, avoiding **Tetris clears**.
-- **Over-rewarding Tetris clears** made agents **stack high and wait for an I-piece**, often leading to failure.
-- **Under-rewarding Tetris clears** led to **single and double line clears**, missing higher scores.
+Initially, **tuning these rewards required manually adjusting values** and running **500+ games per test**—an impractical and slow process. **Genetic Algorithms (GA)** provided a **brute-force approach** to optimizing these parameters efficiently.
 
-Initially, tuning these rewards required **manually adjusting values** and running **500+ games** per test—an impractical and slow process. **Genetic Algorithms (GA)** provided a **brute-force approach** to optimizing these parameters efficiently.
-
-### **Evolutionary Strategy**
-Taking inspiration from **natural selection (survival of the fittest)**, we designed our GA to **evolve the best reward function** by using a combination of:
+### Evolutionary Strategy
+Taking inspiration from **natural selection (survival of the fittest)**, we designed our GA to evolve **the best reward function** by:
 - **High exploration early on**, allowing diverse strategies to develop.
 - **Gradual transition to exploitation**, refining the best strategies over generations.
 
-Each **agent’s performance** was measured by its **average number of lines cleared over 500 games**.
-
-### **Selection Process**
-We used a **hybrid of elite selection and tournament selection**:
-- **Elite Selection (50%)**: The **top 50%** of agents were **directly passed** to the next generation to preserve high-performing strategies.
-- **Tournament Selection (50%)**: The remaining 50% were selected **randomly from the top-performing agents**, maintaining diversity.
-
-### **Crossover Strategy**
-- **Offspring inherited reward function parameters from parents**.
-- **Used a mix of Uniform and Alpha crossover**:
-  - **100% uniform crossover in early generations** (high randomness).
-  - **Gradually transitioned to 100% alpha crossover by game 500** (favoring one parent’s values).
-  - This **ensured high exploration early on and stable exploitation later**.
-
-### **Mutation Strategy**
-- **50% mutation rate early on**, ensuring **diverse strategies**.
-- **Gradually decayed to 5% by game 500**, stabilizing learned behaviors.
-- Mutations introduced **small adjustments** to reward parameters, preventing premature convergence.
+Each agent’s performance was measured by its **average number of lines cleared over 500 games**.
 
 This **exploration-to-exploitation strategy** allowed us to **discover an optimal balance of rewards**, creating a **highly competitive AI**.
 
@@ -173,7 +150,6 @@ This **exploration-to-exploitation strategy** allowed us to **discover an optima
 - **Reduced Redundant Board Operations**: Minimized **unnecessary board evaluations**.
 
 These optimizations allowed **seamless Genetic Algorithm training**, unlocking **massive scalability improvements**.
-
 
 ---
 
