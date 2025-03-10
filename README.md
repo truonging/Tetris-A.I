@@ -19,10 +19,45 @@ The game environment follows **NES Tetris** rules, implementing:
 
 The AI interacts with the game through **state-based decisions**, selecting moves from all possible placements and rotations.
 
-## AI Agent
-The initial AI agent was based on **DQN**, with a **single network** estimating both current and target Q-values. However, this led to **overestimations and early convergence**. To address this, we switched to **Double DQN**, where:
-- The **primary network** predicts actions and updates every 200 pieces.
-- The **target network** stabilizes learning by updating every 1000 pieces.
+## **AI Agent**
+The initial AI agent was based on **Deep Q-Learning (DQN)**, which uses a **single neural network** to estimate both **current and target Q-values**. However, this approach had issues with **Q-value overestimation** and **early convergence**, leading us to explore improvements.
+
+### **Why Q-Learning and DQN?**
+- Tetris has a **well-defined state space**: We represent the board state using **6 features** (`total_height, bumpiness, holes, line_cleared, y_pos, pillar`).
+- The agent **selects only one action per move**, making Q-learning a **good fit** for evaluating discrete actions efficiently.
+- **Experience Replay** helped stabilize learning by allowing the agent to learn from past moves, improving long-term decision-making.
+- With this setup, some agents **achieved 500+ lines** by **game 10,000**, demonstrating strong learning potential.
+
+### **Transition to Double Q-Learning**
+- Initially, we implemented **Double Q-Learning**, which **separates action selection from Q-value estimation** to **reduce overestimation bias**.
+- This led to more **accurate value estimations**, improving learning stability.
+
+### **Switching to Double DQN (DDQN)**
+We later adopted **Double DQN (DDQN)**, which expands on Double Q-Learning by using **two separate neural networks**:
+- **Primary Network**: Predicts actions and updates **every 200 pieces placed**.
+- **Target Network**: Computes target Q-values and updates **every 1000 pieces** to provide more stable training.
+
+This approach **reduces instability** in training, **prevents premature convergence**, and allows the agent to **generalize better across different board states**.
+
+### **Prioritized Experience Replay (PER)**
+Initially, our agent used **Experience Replay**, where past experiences were **randomly sampled** for training. This method helped the agent make **long-term decisions** by allowing it to learn from **past moves**, rather than relying solely on recent experiences.
+
+However, **random sampling treats all experiences equally**, even though some experiences provide **more learning value** than others. To improve this, we implemented **Prioritized Experience Replay (PER).**
+
+#### **Why Prioritized Experience Replay?**
+- Instead of selecting experiences at random, **PER selects experiences based on their TD error** (**Temporal Difference Error**).
+- **TD Error = Difference between predicted and actual Q-values**.
+  - **High TD Error** → The agent’s prediction was far off, meaning **there’s more to learn from this experience**.
+  - **Low TD Error** → The agent already understands this experience well, meaning **less learning value**.
+
+By prioritizing high **TD error** experiences, the agent **learns from its biggest mistakes first**, leading to **faster and more efficient training**—especially in early stages.
+
+#### **Implementation of PER**
+- We replaced the traditional **deque-based replay buffer** with a **heap-based structure**, allowing efficient retrieval of **high-priority experiences**.
+- The heap keeps track of the **maximum TD error**, ensuring that the most **informative experiences are sampled more frequently**.
+
+This approach **significantly improved early training efficiency**, allowing the agent to **focus on valuable experiences** rather than wasting computation on redundant ones.
+
 
 ### Reward Function Design
 Designing a balanced reward function was challenging. If the agent was **only rewarded for clearing lines**, it struggled to learn the steps required to set up efficient line clears. Instead, we introduced **sparse rewards** that encourage moves leading to a **better board state**.
@@ -61,7 +96,7 @@ Instead of relying solely on a **typical decay schedule**, we combined it with a
 - Another **500-game exploration phase** allowed for additional improvements.
 - The final **exploitation phase fine-tuned an even better strategy**.
 - **One full cycle** was enough for a **high-scoring AI (1M+ points)**.
-- **Two cycles further optimized** the agent, making it even stronger.
+- **Two cycles further optimized** the agent, enough to have the agent .
 
 This alternating method helped the agent **learn, refine, explore deeper, and perfect its strategy**.
 
@@ -75,37 +110,70 @@ This alternating method helped the agent **learn, refine, explore deeper, and pe
 - **Batch Size**: `128`
 - **Training Epochs**: `2 per iteration`
 
-### Prioritized Experience Replay
-Instead of randomly selecting past experiences, we implemented **prioritized replay**, where experiences are chosen based on **TD error** (difference between predicted and actual Q-values). This **significantly improved early learning efficiency**.
+## **Genetic Algorithm (GA)**
+Balancing the reward function for Tetris AI proved to be extremely difficult:
+- **Punishing holes too much** led to agents **building tall pillars**.
+- **Punishing pillars too much** made agents **cover them too early**, avoiding **Tetris clears**.
+- **Over-rewarding Tetris clears** made agents **stack high and wait for an I-piece**, often leading to failure.
+- **Under-rewarding Tetris clears** led to **single and double line clears**, missing higher scores.
 
-## Genetic Algorithm (GA)
-To evolve better-performing agents, we implemented a **Genetic Algorithm (GA)** that allowed multiple agents to train simultaneously.
+Initially, tuning these rewards required **manually adjusting values** and running **5,000+ games** per test—an impractical and slow process. **Genetic Algorithms (GA)** provided a **brute-force approach** to optimizing these parameters efficiently.
+
+### **Evolutionary Strategy**
+Taking inspiration from **natural selection (survival of the fittest)**, we designed our GA to **evolve the best reward function** by using a combination of:
+- **High exploration early on**, allowing diverse strategies to develop.
+- **Gradual transition to exploitation**, refining the best strategies over generations.
+
+Each **agent’s performance** was measured by its **average number of lines cleared over 500 games**.
+
+### **Selection Process**
+We used a **hybrid of elite selection and tournament selection**:
+- **Elite Selection (50%)**: The **top 50%** of agents were **directly passed** to the next generation to preserve high-performing strategies.
+- **Tournament Selection (50%)**: The remaining 50% were selected **randomly from the top-performing agents**, maintaining diversity.
+
+### **Crossover Strategy**
+- **Offspring inherited reward function parameters from parents**.
+- **Used a mix of Uniform and Alpha crossover**:
+  - **100% uniform crossover in early generations** (high randomness).
+  - **Gradually transitioned to 100% alpha crossover by game 500** (favoring one parent’s values).
+  - This **ensured high exploration early on and stable exploitation later**.
+
+### **Mutation Strategy**
+- **50% mutation rate early on**, ensuring **diverse strategies**.
+- **Gradually decayed to 5% by game 500**, stabilizing learned behaviors.
+- Mutations introduced **small adjustments** to reward parameters, preventing premature convergence.
+
+This **exploration-to-exploitation strategy** allowed us to **discover an optimal balance of rewards**, creating a **highly competitive AI**.
+
+---
+
+## **Optimizations (Version 1 → Version 2)**
 
 - **Version 1:** The project was **not originally designed** to handle multiple game boards in one window. As a workaround, we used **multiprocessing**, giving each agent its **own CPU core**. However, this approach **limited us to 10 agents**, constrained by available CPU processors.  
 
 - **Version 2:** Knowing we wanted **many agents running at once**, we **redesigned the project** to support multiple boards within a single process. This **eliminated the need for multiprocessing**, allowing the computer to efficiently manage tasks internally. Thanks to optimizations, we increased the number of agents from **10 to 250**.
 
-This major redesign made **GA training far more scalable**, allowing **larger populations** and better evolution.
+### **Profiling revealed two major bottlenecks**:
+1. **Rendering inefficiencies** – Redrawing **static elements** every frame.
+2. **State calculation overhead** – Dropping pieces in **all possible positions** consumed excessive time.
 
-## Optimizations (Version 1 → Version 2)
-Profiling revealed **two major bottlenecks**:
-1. **Rendering inefficiencies** - Redrawing static elements every frame.
-2. **State calculation overhead** - Dropping pieces in all possible positions consumed excessive time.
-
-### Rendering Optimizations
+### **Rendering Optimizations**
 - **Old Approach**: Redrew **every block** in every frame.
-- **New Approach**: Used **dirty rects** (only updating changed areas).  
-  **Result**: Rendering time reduced from **90s → 5s**.
+- **New Approach**: Used **dirty rects** (only updating changed areas).
+  - **Result**: Rendering time reduced from **90s → 5s**.
 
-### State Calculation Optimizations
-- **Old Approach**: Used Python loops, making `calc_all_states()` slow (**~180s**).
-- **New Approach**: Rewrote with **Numba’s njit** for machine code execution.  
-  **Result**: Execution time reduced from **160s → 25s**.
+### **State Calculation Optimizations**
+- **Old Approach**: Used **Python loops**, making `calc_all_states()` slow (**~180s**).
+- **New Approach**: Rewrote with **Numba’s njit** for **machine code execution**.
+  - **Result**: Execution time reduced from **160s → 25s**.
 
-### Additional Optimizations
-- **Blitting Optimization**: Rendered directly to the main screen instead of intermediate surfaces.
-- **Batch Processing**: Consolidated multiple small calculations into fewer large ones.
-- **Reduced Redundant Board Operations**: Minimized unnecessary board evaluations.
+### **Additional Optimizations**
+- **Blitting Optimization**: Rendered **directly to the main screen** instead of intermediate surfaces.
+- **Batch Processing**: Consolidated **multiple small calculations** into fewer large ones.
+- **Reduced Redundant Board Operations**: Minimized **unnecessary board evaluations**.
+
+These optimizations allowed **seamless Genetic Algorithm training**, unlocking **massive scalability improvements**.
+
 
 ---
 
@@ -160,13 +228,14 @@ pip install -r requirements.txt
 
 ### **Version 1**
 ```bash
-cd version1
-python train.py
+cd Version1
+python -c "import train; train.run_game(True)" # Enable slow drop
+python -c "import train; train.run_game(False)" # Disable slow drop
 ```
 
 ### **Version 2**
 ```bash
-cd version2
-python main_screen.py
+cd Version2
+python genetic_algo.py
 ```
 
