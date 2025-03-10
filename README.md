@@ -117,7 +117,7 @@ Balancing the reward function for Tetris AI proved to be extremely difficult:
 - **Over-rewarding Tetris clears** made agents **stack high and wait for an I-piece**, often leading to failure.
 - **Under-rewarding Tetris clears** led to **single and double line clears**, missing higher scores.
 
-Initially, tuning these rewards required **manually adjusting values** and running **5,000+ games** per test—an impractical and slow process. **Genetic Algorithms (GA)** provided a **brute-force approach** to optimizing these parameters efficiently.
+Initially, tuning these rewards required **manually adjusting values** and running **500+ games** per test—an impractical and slow process. **Genetic Algorithms (GA)** provided a **brute-force approach** to optimizing these parameters efficiently.
 
 ### **Evolutionary Strategy**
 Taking inspiration from **natural selection (survival of the fittest)**, we designed our GA to **evolve the best reward function** by using a combination of:
