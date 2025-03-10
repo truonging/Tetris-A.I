@@ -14,6 +14,8 @@ WEIGHT = {
     "holes": (-40, 0),
     "bumpiness": (-40, 0),
     "pillar": (-40, 0),
+    'y_pos_reward':(50,300),
+    'y_pos_punish': (50,300)
 }
 """
 100 generation
@@ -63,6 +65,8 @@ class Genetic_Algo:
                 "holes": np.random.uniform(WEIGHT['holes'][0], WEIGHT['holes'][1]),
                 "bumpiness": np.random.uniform(WEIGHT['bumpiness'][0], WEIGHT['bumpiness'][1]),
                 "pillar": np.random.uniform(WEIGHT['pillar'][0], WEIGHT['pillar'][1]),
+                "y_pos_reward": np.random.uniform(WEIGHT['y_pos_reward'][0], WEIGHT['y_pos_reward'][1]),
+                "y_pos_punish": np.random.uniform(WEIGHT['y_pos_punish'][0], WEIGHT['y_pos_punish'][1]),
             }
             population.append([genome,Agent(genome),0])
         for i in range(1):
@@ -119,7 +123,7 @@ class Genetic_Algo:
 
         return child
 
-    def get_mutate_rate(self, initial_rate=0.50, min_rate=0.2, decay_start=0, k=0.08):
+    def get_mutate_rate(self, initial_rate=0.50, min_rate=0.2, decay_start=100, k=0.08):
         if self.generation_passed < decay_start:
             return initial_rate
         else:
@@ -184,6 +188,7 @@ def run_game():
 if __name__=='__main__':
     # GA = Genetic_Algo()
     # GA.run()
-    cProfile.run('run_game()', 'profile_output.prof')
-    p = pstats.Stats('profile_output.prof')
-    p.strip_dirs().sort_stats('cumulative').print_stats(lambda x: x >= 1)
+    run_game()
+    # cProfile.run('run_game()', 'profile_output.prof')
+    # p = pstats.Stats('profile_output.prof')
+    # p.strip_dirs().sort_stats('cumulative').print_stats(lambda x: x >= 1)

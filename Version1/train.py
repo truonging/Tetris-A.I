@@ -13,10 +13,10 @@ BATCH_SIZE = 128
 EPOCHS = 2
 
 class Training_Simulation:
-    def __init__(self, genome, i, generation, total_games):
+    def __init__(self, genome, i, generation, total_games, SLOW_DROP=True):
         self.generation = generation
         self.i = i
-        self.tetris = Tetris(i=i)
+        self.tetris = Tetris(i=i,SLOW_DROP=SLOW_DROP)
         self.weight = genome
         self.data = [MAX_MEMORY, STATES, HIDDEN_SIZES, ACTIONS, BATCH_SIZE, LR, EPOCHS, total_games]
         self.agent = Agent(self.data)
@@ -142,7 +142,7 @@ class Training_Simulation:
 
         return tetris.scoreboard.hiscore, lines, tetris_clears
 
-def run_game():
+def run_game(SLOW_DROP=True):
     genome = {
         'game_over': 189.27613725914273,
         'survival_instinct': 8.388926084018738,
@@ -155,17 +155,18 @@ def run_game():
         'y_pos_punish': 117.90325502640637
     }
     n = 10000
-    t = Training_Simulation(genome, 1, False,n)
+    print(f'Running simulation SLOW_DROP={SLOW_DROP}')
+    t = Training_Simulation(genome, 1, False,n,SLOW_DROP)
     t.run_simulation(n)
     return
 
 import time
 if __name__=='__main__':
     genome = {'game_over': 189.27613725914273, 'survival_instinct': 8.388926084018738, 'total_height': -0.17634932529980674, 'lines_removed': 8.594602383216944, 'holes': -2.743561101942274, 'bumpiness': -6.683915232551735, 'pillar': -11.042880500059761, 'y_pos_reward': 207.81525814829266, 'y_pos_punish': 117.90325502640637}
-    start_time = time.perf_counter()
-    #print(Training_Simulation(genome, i=0, last_generation=False).run_simulation(100)[1]/100)
-    # run_game()
-    cProfile.run('run_game()', 'profile_output.prof')
-    print(f"The function took {time.perf_counter() - start_time:.6f} seconds to run.")
-    p = pstats.Stats('profile_output.prof')
-    p.strip_dirs().sort_stats('cumulative').print_stats(lambda x: x >= 1)
+    # start_time = time.perf_counter()
+    # print(Training_Simulation(genome, i=0, last_generation=False).run_simulation(100)[1]/100)
+    run_game(True)
+    # cProfile.run('run_game()', 'profile_output.prof')
+    # print(f"The function took {time.perf_counter() - start_time:.6f} seconds to run.")
+    # p = pstats.Stats('profile_output.prof')
+    # p.strip_dirs().sort_stats('cumulative').print_stats(lambda x: x >= 1)

@@ -9,7 +9,8 @@ from ai_board import AI_board
 
 
 class Tetris:
-    def __init__(self,i=1):
+    def __init__(self,i=1,SLOW_DROP=True):
+        self.SLOW_DROP = SLOW_DROP
         self.set_window_position(i)
         pygame.init()
         if not RENDER:
@@ -77,7 +78,7 @@ class Tetris:
         slow_games = set()
         slow_score = 25_000_000
 
-        if self.games in slow_games:# or self.game.score >= slow_score:
+        if self.games in slow_games or self.SLOW_DROP:# or self.game.score >= slow_score:
             self.hard_drop_on = False# if self.game.score <= 30_000_000 else True
             self.clock.tick(40)
         else:

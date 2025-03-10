@@ -295,7 +295,7 @@ class Main_Scoreboard:
         #mx = max(best_genomes,key=lambda x:x[3])[3]
         mx = max(p[3] if p[3]!=250 else 0 for p in best_genomes)
         stats = [
-            f"Generation: {generation+6} out of 100",
+            f"Generation: {generation} out of 100",
             f"Population: {POPULATION_SIZE}",
             f"Total Games: {total_games}",
             f"Lowest Game:  {mn}",
