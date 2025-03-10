@@ -20,29 +20,29 @@ The game environment follows NES Tetris rules, implementing:
 The AI interacts with the game through state-based decisions, selecting moves from all possible placements and rotations.
 
 ## AI Agent
-The initial AI agent was based on **Deep Q-Learning (DQN)**, which uses a **single neural network** to estimate both **current and target Q-values**. However, this approach had issues with **Q-value overestimation** and **early convergence**, leading us to explore improvements.
+The initial AI agent was based on **Deep Q-Learning (DQN)**, which uses a **single neural network** to estimate both **current and target Q-values**. However, this approach had issues with **Q-value overestimation** and **early convergence**, leading me to explore improvements.
 
 ### Why Q-Learning and DQN?
-- Tetris has a **well-defined state space**: We represent the board state using **6 features** (`total_height, bumpiness, holes, line_cleared, y_pos, pillar`).
+- Tetris has a **well-defined state space**:  represent the board state using **6 features** (`total_height, bumpiness, holes, line_cleared, y_pos, pillar`).
 - The agent **selects only one action per move**, making Q-learning a good fit for evaluating discrete actions efficiently.
 - **Experience Replay** helped stabilize learning by allowing the agent to learn from past moves, improving long-term decision-making.
 - With this setup, some agents **achieved 500+ lines** by **game 10,000**, demonstrating strong learning potential.
 
 ### Transition to Double Q-Learning
-- Initially, we implemented **Double Q-Learning**, which **separates action selection from Q-value estimation** to **reduce overestimation bias**.
+- Initially, I implemented **Double Q-Learning**, which **separates action selection from Q-value estimation** to **reduce overestimation bias**.
 - This led to more accurate value estimations, improving learning stability.
 
 ### Switching to Double DQN (DDQN)
-We later adopted **Double DQN (DDQN)**, which expands on Double Q-Learning by using **two separate neural networks**:
+I later adopted **Double DQN (DDQN)**, which expands on Double Q-Learning by using **two separate neural networks**:
 - **Primary Network**: Predicts actions and updates **every 200 pieces placed**.
 - **Target Network**: Computes target Q-values and updates **every 1000 pieces** to provide more stable training.
 
 This approach **reduces instability** in training, **prevents premature convergence**, and allows the agent to **generalize better across different board states**.
 
 ### Prioritized Experience Replay (PER)
-Initially, our agent used **Experience Replay**, where past experiences were **randomly sampled** for training. This method helped the agent make **long-term decisions** by allowing it to learn from **past moves**, rather than relying solely on recent experiences.
+Initially, my agent used **Experience Replay**, where past experiences were **randomly sampled** for training. This method helped the agent make **long-term decisions** by allowing it to learn from **past moves**, rather than relying solely on recent experiences.
 
-However, **random sampling treats all experiences equally**, even though some experiences provide **more learning value** than others. To improve this, we implemented **Prioritized Experience Replay (PER).**
+However, **random sampling treats all experiences equally**, even though some experiences provide **more learning value** than others. To improve this, I implemented **Prioritized Experience Replay (PER).**
 
 #### Why Prioritized Experience Replay?
 - Instead of selecting experiences at random, **PER selects experiences based on their TD error** (**Temporal Difference Error**).
@@ -53,13 +53,13 @@ However, **random sampling treats all experiences equally**, even though some ex
 By prioritizing high **TD error** experiences, the agent **learns from its biggest mistakes first**, leading to **faster and more efficient training**—especially in early stages.
 
 #### Implementation of PER
-- We replaced the traditional deque-based replay buffer with a **heap-based structure**, allowing efficient retrieval of **high-priority experiences**.
+- I replaced the traditional deque-based replay buffer with a **heap-based structure**, allowing efficient retrieval of **high-priority experiences**.
 - The heap keeps track of the **maximum TD error**, ensuring that the most **informative experiences are sampled more frequently**.
 
 This approach **significantly improved early training efficiency**, allowing the agent to **focus on valuable experiences** rather than wasting computation on redundant ones.
 
 ### Reward Function Design
-A well-balanced reward function was necessary to help the agent learn **long-term strategies**. Simply rewarding line clears resulted in poor planning, so we introduced **sparse rewards** to encourage **better board management**.
+A well-balanced reward function was necessary to help the agent learn **long-term strategies**. Simply rewarding line clears resulted in poor planning, so I introduced **sparse rewards** to encourage **better board management**.
 
 #### Key Objectives of a Good Board State:
 - **Minimal bumpiness** → Smoother surfaces for easier line clears.
@@ -81,7 +81,7 @@ A good move in Tetris **does not always have an immediate impact**. The agent ma
 By **considering the delayed impact of moves**, the agent learns **how to set up better board states**, instead of focusing only on immediate rewards.
 
 ### Exploration vs. Exploitation Strategy
-Instead of relying solely on a **typical decay schedule**, we combined it with an **alternating strategy** between **high exploration and high exploitation** in **500-game cycles**. This method **sped up learning while maintaining stability**.
+Instead of relying solely on a **typical decay schedule**, I combined it with an **alternating strategy** between **high exploration and high exploitation** in **500-game cycles**. This method **sped up learning while maintaining stability**.
 
 #### High Exploration Phase (500 games)
 - **Epsilon:** `0.3 → 0.0001`
@@ -114,21 +114,21 @@ Balancing the reward function for Tetris AI proved to be **extremely difficult**
 Initially, **tuning these rewards required manually adjusting values** and running **500+ games per test**—an impractical and slow process. **Genetic Algorithms (GA)** provided a **brute-force approach** to optimizing these parameters efficiently.
 
 ### Evolutionary Strategy
-Taking inspiration from **natural selection (survival of the fittest)**, we designed our GA to evolve **the best reward function** by:
+Taking inspiration from **natural selection (survival of the fittest)**, I designed the GA to evolve **the best reward function** by:
 - **High exploration early on**, allowing diverse strategies to develop.
 - **Gradual transition to exploitation**, refining the best strategies over generations.
 
 Each agent’s performance was measured by its **average number of lines cleared over 500 games**.
 
-This **exploration-to-exploitation strategy** allowed us to **discover an optimal balance of rewards**, creating a **highly competitive AI**.
+This **exploration-to-exploitation strategy** allowed me to **discover an optimal balance of rewards**, creating a **highly competitive AI**.
 
 ---
 
 ## **Optimizations (Version 1 → Version 2)**
 
-- **Version 1:** The project was **not originally designed** to handle multiple game boards in one window. As a workaround, we used **multiprocessing**, giving each agent its **own CPU core**. However, this approach **limited us to 10 agents**, constrained by available CPU processors.  
+- **Version 1:** The project was **not originally designed** to handle multiple game boards in one window. As a workaround, I used **multiprocessing**, giving each agent its **own CPU core**. However, this approach **limited me to 10 agents**, constrained by available CPU processors.  
 
-- **Version 2:** Knowing we wanted **many agents running at once**, we **redesigned the project** to support multiple boards within a single process. This **eliminated the need for multiprocessing**, allowing the computer to efficiently manage tasks internally. Thanks to optimizations, we increased the number of agents from **10 to 250**.
+- **Version 2:** Knowing I wanted **many agents running at once**, I **redesigned the project** to support multiple boards within a single process. This **eliminated the need for multiprocessing**, allowing the computer to efficiently manage tasks internally. Thanks to optimizations, I increased the number of agents from **10 to 250**.
 
 ### **Profiling revealed two major bottlenecks**:
 1. **Rendering inefficiencies** – Redrawing **static elements** every frame.
