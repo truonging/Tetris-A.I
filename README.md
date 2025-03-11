@@ -129,12 +129,12 @@ We used a **hybrid of elite selection and tournament selection**:
 - **Offspring inherited reward function parameters from parents**.
 - **Used a mix of Uniform and Alpha crossover**:
   - **100% uniform crossover in early generations** (high randomness).
-  - **Gradually transitioned to 100% alpha crossover by game 500** (favoring one parent’s values).
+  - **Gradually transitioned to 100% alpha crossover by generation 100** (favoring one parent’s values).
   - This **ensured high exploration early on and stable exploitation later**.
 
 ### **Mutation Strategy**
 - **50% mutation rate early on**, ensuring **diverse strategies**.
-- **Gradually decayed to 5% by game 500**, stabilizing learned behaviors.
+- **Gradually decayed to 5% by generation 100**, stabilizing learned behaviors.
 - Mutations introduced **small adjustments** to reward parameters, preventing premature convergence.
 
 This **exploration-to-exploitation strategy** allowed me to **discover an optimal balance of rewards**, creating a **highly competitive AI**.
