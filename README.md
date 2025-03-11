@@ -120,6 +120,23 @@ Taking inspiration from **natural selection (survival of the fittest)**, I desig
 
 Each agent’s performance was measured by its **average number of lines cleared over 500 games**.
 
+### **Selection Process**
+We used a **hybrid of elite selection and tournament selection**:
+- **Elite Selection (50%)**: The **top 50%** of agents were **directly passed** to the next generation to preserve high-performing strategies.
+- **Tournament Selection (50%)**: The remaining 50% were selected **randomly from the top-performing agents**, maintaining diversity.
+
+### **Crossover Strategy**
+- **Offspring inherited reward function parameters from parents**.
+- **Used a mix of Uniform and Alpha crossover**:
+  - **100% uniform crossover in early generations** (high randomness).
+  - **Gradually transitioned to 100% alpha crossover by game 500** (favoring one parent’s values).
+  - This **ensured high exploration early on and stable exploitation later**.
+
+### **Mutation Strategy**
+- **50% mutation rate early on**, ensuring **diverse strategies**.
+- **Gradually decayed to 5% by game 500**, stabilizing learned behaviors.
+- Mutations introduced **small adjustments** to reward parameters, preventing premature convergence.
+
 This **exploration-to-exploitation strategy** allowed me to **discover an optimal balance of rewards**, creating a **highly competitive AI**.
 
 ---
