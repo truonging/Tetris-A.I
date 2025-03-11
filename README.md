@@ -159,7 +159,7 @@ This **exploration-to-exploitation strategy** allowed me to **discover an optima
 ### **State Calculation Optimizations**
 - **Old Approach**: Used **Python loops**, making `calc_all_states()` slow (**~180s**).
 - **New Approach**: Rewrote with **Numba’s njit** for **machine code execution**.
-  - **Result**: Execution time reduced from **160s → 25s**.
+  - **Result**: Execution time reduced from **180s → 15s**.
 
 ### **Additional Optimizations**
 - **Blitting Optimization**: Rendered **directly to the main screen** instead of intermediate surfaces.
@@ -205,7 +205,7 @@ ncalls tottime percall cumtime percall filename:lineno(function)
 
 ### **Key Takeaways**
 - **Total runtime reduced from 483.52s → 52.53s (≈89% speedup)**
-- **`calc_all_states()` reduced from 180s → ~5s**
+- **`calc_all_states()` reduced from 180s → ~15s**
 - **Rendering reduced from 90s → ~5s**
 - **Overall, training is significantly faster and more scalable.**
 
